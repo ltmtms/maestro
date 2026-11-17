@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#120604" />
+    <meta name="description" content="Take the podium: conduct a symphony orchestra with your camera and a baton. Pachelbel, Beethoven, Strauss." />
+    <title>MAESTRO · Conduct the Orchestra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app">
+      <video id="camera" playsinline muted></video>
+      <canvas id="stage" class="stage"></canvas>
+
+      <!-- MENU -->
+      <section id="menu" class="screen active">
+        <div class="menu">
+          <header class="crest">
+            <p class="eyebrow">· Tonight’s concert ·</p>
+            <h1 class="logo">Maestro</h1>
+            <p class="lede">Take the podium. Your baton leads the orchestra: its <em>tempo</em>, its <em>dynamics</em>, its every entrance.</p>
+          </header>
+
+          <h2 class="h2">Choose your programme</h2>
+          <div id="pieces" class="pieces"></div>
+
+          <div class="row-opts">
+            <div class="opt">
+              <span class="opt-label">I conduct with my</span>
+              <div class="seg" role="radiogroup" aria-label="Conducting hand">
+                <button class="seg-btn" data-hand="R" role="radio">Right hand</button>
+                <button class="seg-btn" data-hand="L" role="radio">Left hand</button>
+              </div>
+            </div>
+            <label class="upload">
+              <input id="file" type="file" accept="audio/*,.mp3" hidden />
+              <span class="upload-title">♫ Conduct your own recording</span>
+              <span id="file-name" class="upload-sub">Upload an MP3 · it keeps its own tempo, you shape its energy</span>
+            </label>
+          </div>
+
+          <button id="start" class="btn primary" disabled>Take the podium</button>
+
+          <details class="howto" open>
+            <summary>How to conduct</summary>
+            <div class="patterns" id="patterns"></div>
+            <ul class="tips">
+              <li><b>Start like a real conductor:</b> a preparatory upbeat ↑, then the downbeat ↓. The time between them sets the tempo.</li>
+              <li><b>Follow the golden arrows.</b> Each beat is a stroke in the arrow’s direction; the light reaches the end on the beat.</li>
+              <li><b>Size is volume:</b> small gestures for <i>piano</i>, big ones for <i>forte</i>. Match the marking on the right.</li>
+              <li><b>The orchestra follows you.</b> Speed up and it speeds up; stop, and it will wait for your next beat.</li>
+              <li><b>Baton:</b> a real baton, a chopstick or a pencil. Light-coloured against a dark background is easiest to see. No baton? Your hand works too.</li>
+            </ul>
+          </details>
+          <p class="fine">Camera and music stay on your device. Orchestra samples: FluidR3 GM (Frank Wen, MIT). Pose tracking: MediaPipe.</p>
+        </div>
+      </section>
+
+      <!-- LOADING -->
+      <section id="loading" class="screen">
+        <div class="card center">
+          <div class="baton-spin"></div>
+          <p id="load-text" class="load-text">Tuning the orchestra…</p>
+          <div class="bar"><div id="load-bar" class="bar-fill"></div></div>
+          <p id="load-sub" class="load-sub"></p>
+        </div>
+      </section>
+
+      <!-- HUD -->
+      <section id="hud" class="hud">
+        <div class="hud-top">
+          <div class="hud-piece">
+            <p id="h-title" class="h-title"></p>
+            <p id="h-sub" class="h-sub"></p>
+          </div>
+          <div class="hud-tempo">
+            <p id="h-marking" class="h-marking"></p>
+            <p class="h-bpm"><svg class="q" viewBox="0 0 10 16" aria-label="quarter note"><ellipse cx="4" cy="13" rx="3.6" ry="2.5" transform="rotate(-22 4 13)"/><rect x="6.5" y="1" width="1.3" height="12"/></svg> = <span id="h-bpm">—</span> <small id="h-bpm-note"></small></p>
+            <p id="h-bar" class="h-bar"></p>
+          </div>
+          <div class="hud-score">
+            <p id="h-points" class="h-points">0</p>
+            <p id="h-combo" class="h-combo"></p>
+            <button id="pause" class="icon" aria-label="Stop">■</button>
+          </div>
+        </div>
+        <div class="dyn" aria-label="Dynamics">
+          <div class="dyn-scale">
+            <span>ff</span><span>f</span><span>mf</span><span>mp</span><span>p</span><span>pp</span>
+          </div>
+          <div class="dyn-track">
+            <div id="dyn-target" class="dyn-target"></div>
+            <div id="dyn-level" class="dyn-level"></div>
+          </div>
+          <p id="dyn-label" class="dyn-label"></p>
+        </div>
+        <p id="message" class="message"></p>
+      </section>
+
+      <!-- STOPPED -->
+      <section id="paused" class="screen">
+        <div class="card center">
+          <h2 class="h2">Intermission</h2>
+          <button id="resume" class="btn primary">Back to the podium</button>
+          <button id="restart" class="btn ghost">Start the piece again</button>
+          <button id="quit" class="btn ghost">Leave the stage</button>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results" class="screen">
+        <div class="card results">
+          <p class="eyebrow">· Curtain call ·</p>
+          <div id="grade" class="grade">S</div>
+          <p id="grade-title" class="grade-title"></p>
+          <p id="r-piece" class="r-piece"></p>
+          <div class="stats">
+            <div><b id="r-bravissimo">0</b><span>Bravissimo</span></div>
+            <div><b id="r-bravo">0</b><span>Bravo</span></div>
+            <div><b id="r-bene">0</b><span>Bene</span></div>
+            <div><b id="r-ancora">0</b><span>Ancora</span></div>
+            <div><b id="r-missed">0</b><span>Missed</span></div>
+          </div>
+          <p id="r-detail" class="r-detail"></p>
+          <div class="about">
+            <p class="about-h">About the music</p>
+            <p id="r-about" class="about-p"></p>
+          </div>
+          <div class="row">
+            <button id="again" class="btn primary">Encore!</button>
+            <button id="to-menu" class="btn ghost">Another piece</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
